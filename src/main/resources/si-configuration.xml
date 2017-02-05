@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:int-redis="http://www.springframework.org/schema/integration/redis"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/redis http://www.springframework.org/schema/integration/redis/spring-integration-redis.xsd">
+
+    <int:channel id="input-channel-redis"/>
+    <int:channel id="output-channel-redis"/>
+
+    <int-redis:queue-inbound-channel-adapter queue="queue-input-redis"
+                                             channel="input-channel-redis"
+                                             serializer=""/>
+    <int-redis:queue-outbound-channel-adapter queue="queue-output-redis" channel="output-channel-redis" serializer=""/>
+
+</beans>
