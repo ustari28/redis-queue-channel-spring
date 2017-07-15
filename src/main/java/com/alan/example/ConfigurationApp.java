@@ -44,13 +44,13 @@ public class ConfigurationApp {
     }
 
     @Transformer(inputChannel = "input-channel-redis", outputChannel = "output-channel-redis")
-    public String transformBean(final byte[] input) {
+    public String transformBean(final byte[] input) throws UnsupportedEncodingException {
 
         try {
             log.info("input " + new String(input, Constants.ENCODING));
         } catch (UnsupportedEncodingException e) {
             log.error("encoding doesnt supported");
         }
-        return "";
+        return new String(input, Constants.ENCODING);
     }
 }

@@ -2,17 +2,29 @@
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:int="http://www.springframework.org/schema/integration"
        xmlns:int-redis="http://www.springframework.org/schema/integration/redis"
+       xmlns:task="http://www.springframework.org/schema/task"
        xmlns="http://www.springframework.org/schema/beans"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
-		http://www.springframework.org/schema/integration/redis http://www.springframework.org/schema/integration/redis/spring-integration-redis.xsd">
+		http://www.springframework.org/schema/integration/redis http://www.springframework.org/schema/integration/redis/spring-integration-redis.xsd
+        http://www.springframework.org/schema/task https://www.springframework.org/task/spring-task.xsd">
 
-    <int:channel id="input-channel-redis"/>
-    <int:channel id="output-channel-redis"/>
+    <int:poller id="default" default="true" fixed-rate="30" max-messages-per-poll="10"/>
+    <task:executor id="executor-input-redis" pool-size="10" keep-alive="10" queue-capacity="1000"
+                   rejection-policy="CALLER_RUNS"/>
+    <task:executor id="executor-ouput-redis" pool-size="10" keep-alive="10" queue-capacity="1000"
+                   rejection-policy="CALLER_RUNS"/>
+    <int:channel id="input-channel-redis">
+        <int:dispatcher task-executor="executor-input-redis"/>
+    </int:channel>
+    <int:channel id="output-channel-redis">
+        <int:dispatcher task-executor="executor-ouput-redis"/>
+    </int:channel>
 
     <int-redis:queue-inbound-channel-adapter queue="queue-input-redis"
                                              channel="input-channel-redis"
                                              serializer=""/>
-    <int-redis:queue-outbound-channel-adapter queue="queue-output-redis" channel="output-channel-redis" serializer=""/>
+    <int-redis:queue-outbound-channel-adapter queue="queue-output-redis"
+                                              channel="output-channel-redis" serializer=""/>
 
 </beans>
