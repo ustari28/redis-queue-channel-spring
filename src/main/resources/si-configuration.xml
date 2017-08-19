@@ -2,17 +2,22 @@
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:int="http://www.springframework.org/schema/integration"
        xmlns:int-redis="http://www.springframework.org/schema/integration/redis"
+       xmlns:int-file="http://www.springframework.org/schema/integration/file"
        xmlns:task="http://www.springframework.org/schema/task"
        xmlns="http://www.springframework.org/schema/beans"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
 		http://www.springframework.org/schema/integration/redis http://www.springframework.org/schema/integration/redis/spring-integration-redis.xsd
-        http://www.springframework.org/schema/task https://www.springframework.org/task/spring-task.xsd">
+        http://www.springframework.org/schema/task https://www.springframework.org/task/spring-task.xsd
+        http://www.springframework.org/schema/integration/file
+        http://www.springframework.org/schema/integration/file/spring-integration-file.xsd">
 
     <int:poller id="default" default="true" fixed-rate="30" max-messages-per-poll="10"/>
     <task:executor id="executor-input-redis" pool-size="10" keep-alive="10" queue-capacity="1000"
                    rejection-policy="CALLER_RUNS"/>
     <task:executor id="executor-ouput-redis" pool-size="10" keep-alive="10" queue-capacity="1000"
+                   rejection-policy="CALLER_RUNS"/>
+    <task:executor id="executor-transformer-1" pool-size="1500" keep-alive="60" queue-capacity="2000"
                    rejection-policy="CALLER_RUNS"/>
     <int:channel id="input-channel-redis">
         <int:dispatcher task-executor="executor-input-redis"/>
@@ -20,11 +25,33 @@
     <int:channel id="output-channel-redis">
         <int:dispatcher task-executor="executor-ouput-redis"/>
     </int:channel>
+    <int:channel id="output-transformer-to-queue">
+        <int:dispatcher task-executor="executor-input-redis"/>
+    </int:channel>
+    <int:channel id="output-splitter-messages-test-file">
+        <int:dispatcher task-executor="executor-transformer-1"/>
+    </int:channel>
 
     <int-redis:queue-inbound-channel-adapter queue="queue-input-redis"
                                              channel="input-channel-redis"
                                              serializer=""/>
     <int-redis:queue-outbound-channel-adapter queue="queue-output-redis"
                                               channel="output-channel-redis" serializer=""/>
+    <int-file:inbound-channel-adapter id="file-inbound-app-test-file" directory="${user.home}/Downloads"
+                                      filename-pattern="EF*.txt" prevent-duplicates="true"
+                                      channel="channel-read-messages-test-file">
+        <int-file:nio-locker/>
+    </int-file:inbound-channel-adapter>
+    <int-file:splitter id="splitter-messages-test-file"
+                       input-channel="channel-read-messages-test-file"
+                       output-channel="output-splitter-messages-test-file" charset="UTF-8"/>
+    <int:transformer id="transformer-int" ref="transformerFileMessage"
+                     input-channel="output-splitter-messages-test-file" output-channel="output-transformer-to-queue">
+        <!--bean class="com.alan.example.TransformerFileMessage" scope="prototype" /-->
+    </int:transformer>
+    <int-redis:queue-outbound-channel-adapter id="outbound-channel-adapter-queue"
+                                              channel="output-transformer-to-queue"
+                                              queue="redis-queue-test"/>
+
 
 </beans>

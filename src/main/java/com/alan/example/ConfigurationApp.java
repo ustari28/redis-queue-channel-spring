@@ -13,7 +13,7 @@ import java.io.UnsupportedEncodingException;
 
 /**
  * @author Alan Dávila<br>
- *         08 ene. 2017 22:54
+ * 08 ene. 2017 22:54
  */
 @Configuration
 @Slf4j
@@ -53,4 +53,5 @@ public class ConfigurationApp {
         }
         return new String(input, Constants.ENCODING);
     }
+
 }
