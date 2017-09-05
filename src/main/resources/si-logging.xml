@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:int-file="http://www.springframework.org/schema/integration/file"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+
+        http://www.springframework.org/schema/task https://www.springframework.org/task/spring-task.xsd
+        http://www.springframework.org/schema/integration/file
+        http://www.springframework.org/schema/integration/file/spring-integration-file.xsd">
+
+    <task:executor id="executor-channel-all-messages" rejection-policy="CALLER_RUNS" pool-size="100-200"
+                   queue-capacity="1000" keep-alive="20"/>
+    <!--int:channel id="channel-all-messages">
+        <int:dispatcher task-executor="executor-channel-all-messages"/>
+    </int:channel -->
+    <int:publish-subscribe-channel id="pubsub-channel-all-messages" task-executor="executor-channel-all-messages"/>
+    <int:logging-channel-adapter id="logging-channel" channel="pubsub-channel-all-messages" logger-name="logging-app"
+                                 level="INFO"/>
+    <int-file:outbound-channel-adapter id="outbound-channel-file" channel="pubsub-channel-all-messages"
+                                       directory="${user.home}/Downloads/logs" mode="APPEND"
+                                       filename-generator="queueFileNameGenerator"/>
+</beans>

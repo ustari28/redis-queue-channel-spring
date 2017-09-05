@@ -31,7 +31,11 @@
     <int:channel id="output-splitter-messages-test-file">
         <int:dispatcher task-executor="executor-transformer-1"/>
     </int:channel>
-
+    <int:channel id="channel-read-messages-test-file-header">
+        <int:interceptors>
+            <int:wire-tap channel="pubsub-channel-all-messages"/>
+        </int:interceptors>
+    </int:channel>
     <int-redis:queue-inbound-channel-adapter queue="queue-input-redis"
                                              channel="input-channel-redis"
                                              serializer=""/>
@@ -42,8 +46,12 @@
                                       channel="channel-read-messages-test-file">
         <int-file:nio-locker/>
     </int-file:inbound-channel-adapter>
+    <int:header-enricher id="enricher-channel-headers" input-channel="channel-read-messages-test-file"
+                         output-channel="channel-read-messages-test-file-header">
+        <int:header name="queuename" value="channel-read-messages-test-file"/>
+    </int:header-enricher>
     <int-file:splitter id="splitter-messages-test-file"
-                       input-channel="channel-read-messages-test-file"
+                       input-channel="channel-read-messages-test-file-header"
                        output-channel="output-splitter-messages-test-file" charset="UTF-8"/>
     <int:transformer id="transformer-int" ref="transformerFileMessage"
                      input-channel="output-splitter-messages-test-file" output-channel="output-transformer-to-queue">
@@ -52,6 +60,6 @@
     <int-redis:queue-outbound-channel-adapter id="outbound-channel-adapter-queue"
                                               channel="output-transformer-to-queue"
                                               queue="redis-queue-test"/>
-
+    <import resource="si-logging.xml"/>
 
 </beans>
