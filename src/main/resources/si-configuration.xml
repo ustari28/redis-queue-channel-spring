@@ -52,11 +52,15 @@
     </int:header-enricher>
     <int-file:splitter id="splitter-messages-test-file"
                        input-channel="channel-read-messages-test-file-header"
-                       output-channel="output-splitter-messages-test-file" charset="UTF-8"/>
-    <int:transformer id="transformer-int" ref="transformerFileMessage"
+                       output-channel="output-splitter-messages-test-file" charset="UTF-8" markers="true"/>
+    <int:transformer id="transformer-int" ref="transformerFileMessage" method="transformerFileMessage"
                      input-channel="output-splitter-messages-test-file" output-channel="output-transformer-to-queue">
         <!--bean class="com.alan.example.TransformerFileMessage" scope="prototype" /-->
     </int:transformer>
+    <int:service-activator id="service-act-transformer-mark" requires-reply="false"
+                           input-channel="output-splitter-messages-test-file"
+                           output-channel="nullChannel" ref="transformerFileMessage"
+                           method="transformerFileMessageMark"/>
     <int-redis:queue-outbound-channel-adapter id="outbound-channel-adapter-queue"
                                               channel="output-transformer-to-queue"
                                               queue="redis-queue-test"/>
